@@ -3,25 +3,35 @@ pipeline {
     stages { 
         stage('Checkout') { 
             steps { 
-               Checkout scm
+              checkout scm
             }
         }
         stage('Build') {  
             steps {
-              echo "hello world"
+              sh "docker build -t lyt-test:latest ."
+              sh "docker tag lyt-test:latest 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:${env.GIT_COMMIT.take(7)}"
+              sh "docker tag lyt-test:latest 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:latest"
+              sh "docker push 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:latest"
+              sh "docker push 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:${env.GIT_COMMIT.take(7)}"
             }
         }
-        // stage('Upload') {
-        //     steps {
-        //       sh "docker tag lyt-login-portal:latest 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:latest"
-        //       sh "docker push 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:latest"
-        //       echo "Image "
-        //     }
-        // }
-        // stage('Deploy') {
-        //     steps {
-        //       sh "ecs deploy my-cluster my-service"
-        //     }
-        // }
+        stage('Ecr login') {
+            steps {
+              sh "aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 695292474035.dkr.ecr.us-west-2.amazonaws.com"
+            }
+        }
+        stage('Push to ecr') {
+            steps {
+              sh "docker push 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:latest"
+              sh "docker push 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:${env.GIT_COMMIT.take(7)}"
+            }
+        }
+        stage('Cleanup jenkins') {
+            steps {
+              sh "docker rmi lyt-test:latest"
+              sh "docker rmi 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:${env.GIT_COMMIT.take(7)}"
+              sh "docker rmi 695292474035.dkr.ecr.us-west-2.amazonaws.com/lyt-loging-portal:latest"
+            }
+        }
     }
 }
