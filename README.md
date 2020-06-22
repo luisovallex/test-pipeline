@@ -1,3 +1,4 @@
-# test-pipeline
+# musician-app
+NodeJS / React sample app for AWS CI/CD pipeline tutorial
 
-test2
+https://www.youtube.com/watch?v=NwzJCSPSPZs
